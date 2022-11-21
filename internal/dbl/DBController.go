@@ -20,13 +20,19 @@ func GetDBConnection() (*sql.DB, error) {
 	return db, err
 }
 
-func AddMoneyToUser(b Balance) error {
+func AddMoneyToUser(userId, newBalance string) error {
 	db, err := GetDBConnection()
 	if err == nil {
-		sqlStatement := `
-			INSERT INTO balances (user_id, balance)
-			VALUES ($1, $2)`
-		_, err = db.Exec(sqlStatement, b.UserId, b.MoneyAmount)
+		//sqlStatement := `
+		//	INSERT INTO balances (user_id, balance)
+		//	VALUES ($1, $2)`
+		sqlStatement := `INSERT INTO balances (user_id, balance)
+							VALUES($1, $2) 
+							ON CONFLICT (user_id) 
+							DO 
+						   	UPDATE SET balance = ` + newBalance + `;`
+		//_, err = db.Exec(sqlStatement, r.UserId, r.ServiceId, r.OrderId, r.MoneyAmount)
+		_, err = db.Exec(sqlStatement, userId, newBalance)
 		return err
 	}
 	return err

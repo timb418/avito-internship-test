@@ -44,7 +44,13 @@ func Profit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = AddMoneyToUser(profit)
+	oldBalance, err := GetUserBalanceFromDB(profit.UserId)
+	oldAmount, _ := currency.NewAmount(oldBalance.MoneyAmount, "RUB")
+	moneyToAdd, err := currency.NewAmount(profit.MoneyAmount, "RUB")
+
+	am, _ := oldAmount.Add(moneyToAdd)
+	err = AddMoneyToUser(profit.UserId, am.Number())
+
 	if err != nil {
 		log.Fatalln("Could not add money to a user")
 		return
