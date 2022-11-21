@@ -97,10 +97,3 @@ func GetUserBalance(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(foundUserBalance)
 }
-
-//func GetUserBalanceTest(w http.ResponseWriter, r *http.Request) {
-//
-//	w.Header().Set("Content-Type", "application/json")
-//	res, _ := GetUserBalanceFromDB("timur")
-//	w.Write([]byte(res.MoneyAmount))
-//}
