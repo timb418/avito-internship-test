@@ -66,6 +66,9 @@ func ReserveMoney(w http.ResponseWriter, r *http.Request) {
 	moneyToSub, err := currency.NewAmount(req.MoneyAmount, "RUB")
 
 	am, _ := oldAmount.Sub(moneyToSub)
+	if am.IsNegative() {
+		return
+	}
 
 	err = UpdateUserBalanceInDB(req.UserId, am.Number())
 	if err != nil {
@@ -97,6 +100,9 @@ func Acknowledge(w http.ResponseWriter, r *http.Request) {
 	oldAmount, _ := currency.NewAmount(oldBalance.MoneyAmount, "RUB")
 	moneyToSub, err := currency.NewAmount(req.MoneyAmount, "RUB")
 	am, _ := oldAmount.Sub(moneyToSub)
+	if am.IsNegative() {
+		return
+	}
 
 	err = UpdateFrozenUserBalanceInDB(req.UserId, am.Number())
 	if err != nil {
