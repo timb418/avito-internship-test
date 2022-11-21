@@ -60,8 +60,7 @@ func ReserveMoney(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//TODO
-	// Subtract money from the old balance
+
 	oldBalance, err := GetUserBalanceFromDB(req.UserId)
 	oldAmount, _ := currency.NewAmount(oldBalance.MoneyAmount, "RUB")
 	moneyToSub, err := currency.NewAmount(req.MoneyAmount, "RUB")
@@ -84,7 +83,32 @@ func ReserveMoney(w http.ResponseWriter, r *http.Request) {
 	})
 
 }
-func Acknowledge(writer http.ResponseWriter, request *http.Request) {}
+func Acknowledge(w http.ResponseWriter, r *http.Request) {
+	// Метод признания выручки – списывает из резерва деньги, добавляет данные в отчет для бухгалтерии. Принимает id пользователя, ИД услуги, ИД заказа, сумму
+	var req Reserve
+	w.Header().Set("Content-Type", "application/json")
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// списать деньги со старого замороженного счета
+	oldBalance, err := GetUserFrozenBalanceFromDB(req.UserId)
+	oldAmount, _ := currency.NewAmount(oldBalance.MoneyAmount, "RUB")
+	moneyToSub, err := currency.NewAmount(req.MoneyAmount, "RUB")
+	am, _ := oldAmount.Sub(moneyToSub)
+
+	err = UpdateFrozenUserBalanceInDB(req.UserId, am.Number())
+	if err != nil {
+		return
+	}
+
+	// добавить в бух
+	err = AddAccountingRecord(req)
+	if err != nil {
+		return
+	}
+}
 func GetUserBalance(w http.ResponseWriter, r *http.Request) {
 	var userId Balance
 	w.Header().Set("Content-Type", "application/json")

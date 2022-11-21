@@ -13,6 +13,7 @@ func main() {
 	http.HandleFunc("/profit", dbl.Profit)
 	http.HandleFunc("/user-balance", dbl.GetUserBalance)
 	http.HandleFunc("/reserve", dbl.ReserveMoney)
+	http.HandleFunc("/acknowledge", dbl.Acknowledge)
 
 	http.ListenAndServe(":8090", nil)
 }

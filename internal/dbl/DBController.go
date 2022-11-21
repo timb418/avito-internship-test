@@ -41,6 +41,16 @@ func GetUserBalanceFromDB(userId string) (Balance, error) {
 	}
 	return b, err
 }
+func GetUserFrozenBalanceFromDB(userId string) (Balance, error) {
+	db, err := GetDBConnection()
+	var b Balance
+	if err == nil {
+		sqlStatement := `select user_id, reserve_amount from reserved_money where user_id = $1`
+		_ = db.QueryRow(sqlStatement, userId).Scan(&b.UserId, &b.MoneyAmount)
+
+	}
+	return b, err
+}
 func UpdateUserBalanceInDB(userId, newBalance string) error {
 	db, err := GetDBConnection()
 	if err == nil {
@@ -50,15 +60,34 @@ func UpdateUserBalanceInDB(userId, newBalance string) error {
 	}
 	return err
 }
+func UpdateFrozenUserBalanceInDB(userId, newBalance string) error {
+	db, err := GetDBConnection()
+	if err == nil {
+		sqlStatement := `UPDATE reserved_money set reserve_amount=$1 where user_id=$2`
+		_, err = db.Exec(sqlStatement, newBalance, userId)
+		return err
+	}
+	return err
+}
 func FreezeMoney(r Reserve) error {
 	db, err := GetDBConnection()
 	if err == nil {
-		//TODO
 		sqlStatement := `INSERT INTO reserved_money (user_id, service_id, order_id, reserve_amount)
 							VALUES($1, $2, $3, $4) 
 							ON CONFLICT (user_id) 
 							DO 
 						   	UPDATE SET reserve_amount = ` + r.MoneyAmount + `;`
+		_, err = db.Exec(sqlStatement, r.UserId, r.ServiceId, r.OrderId, r.MoneyAmount)
+		return err
+	}
+	return err
+}
+func AddAccountingRecord(r Reserve) error {
+	db, err := GetDBConnection()
+	if err == nil {
+		//TODO
+		sqlStatement := `INSERT INTO accounting_logbook (user_id, service_id, order_id, money_spent)
+							VALUES($1, $2, $3, $4);`
 		_, err = db.Exec(sqlStatement, r.UserId, r.ServiceId, r.OrderId, r.MoneyAmount)
 		return err
 	}
