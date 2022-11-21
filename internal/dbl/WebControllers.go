@@ -52,24 +52,36 @@ func Profit(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 func ReserveMoney(w http.ResponseWriter, r *http.Request) {
-	// Parse the reqauest
-	var reserve Reserve
+	// Parse the request
+	var req Reserve
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewDecoder(r.Body).Decode(&reserve)
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	//TODO
 	// Subtract money from the old balance
-	oldBalance, err := GetUserBalanceFromDB(reserve.UserId)
+	oldBalance, err := GetUserBalanceFromDB(req.UserId)
 	oldAmount, _ := currency.NewAmount(oldBalance.MoneyAmount, "RUB")
-	moneyToSub, err := currency.NewAmount(reserve.MoneyAmount, "RUB")
+	moneyToSub, err := currency.NewAmount(req.MoneyAmount, "RUB")
 
-	oldAmount.Sub(moneyToSub)
+	am, _ := oldAmount.Sub(moneyToSub)
 
-	//TODO
-	// Add the money to a reserve
+	err = UpdateUserBalanceInDB(req.UserId, am.Number())
+	if err != nil {
+		return
+	}
+
+	// get frozen money, add to it, update
+	newReserve, err := GetFrozenMoneyForUser(req.UserId)
+	freezeAmount, _ := currency.NewAmount(newReserve.MoneyAmount, "RUB")
+	am, _ = freezeAmount.Add(moneyToSub)
+
+	//push it to db
+	err = FreezeMoney(Reserve{UserId: req.UserId, ServiceId: req.ServiceId,
+		OrderId: req.OrderId, MoneyAmount: am.Number(),
+	})
 
 }
 func Acknowledge(writer http.ResponseWriter, request *http.Request) {}

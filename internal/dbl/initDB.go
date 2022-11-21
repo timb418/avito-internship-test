@@ -7,7 +7,7 @@ const (
 	PRIMARY KEY (user_id)
 );`
 	reservedMoney = `CREATE TABLE IF NOT EXISTS reserved_money (
-	user_id varchar(30),
+	user_id varchar(30) UNIQUE,
 	service_id text,
 	order_id text NOT NULL,
 	reserve_amount text,
