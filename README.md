@@ -1,4 +1,6 @@
 # avito-internship-test
+
+Задание находится [здесь](https://github.com/timb418/internship_backend_2022)
  
 Для запуска: cd в корень проекта, docker-compose up --build -d
 
